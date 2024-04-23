@@ -56,7 +56,7 @@ $ pwd
    npm i @metaplex-foundation/mpl-token-metadata
    ```
    
-Once you've completed the Sinstallations run the following
+Once you've completed the installations run the following
 commands to configure your machine for deployment:
 
 ```
