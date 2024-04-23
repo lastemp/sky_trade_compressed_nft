@@ -2,7 +2,6 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { SkyTradeCompressedNft } from "../target/types/sky_trade_compressed_nft";
 import {
-  AccountMeta,
   Connection,
   Keypair,
   PublicKey,
@@ -11,35 +10,20 @@ import {
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import {
-  ConcurrentMerkleTreeAccount,
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   SPL_NOOP_PROGRAM_ID,
   ValidDepthSizePair,
   createAllocTreeIx,
 } from "@solana/spl-account-compression";
-import {
-  findTreeConfigPda,
-  MPL_BUBBLEGUM_PROGRAM_ID,
-} from "@metaplex-foundation/mpl-bubblegum";
+import { MPL_BUBBLEGUM_PROGRAM_ID } from "@metaplex-foundation/mpl-bubblegum";
 import {
   Metaplex,
   keypairIdentity,
-  CreateNftOutput,
   CreateCompressedNftOutput,
 } from "@metaplex-foundation/js";
-
-/* import {
-  Metaplex,
-  keypairIdentity,
-  CreateNftOutput,
-} from "@metaplex-foundation/js";
-import { assert } from "chai"; */
-//import { PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
-//import { extractAssetId, heliusApi } from "../utils/utils";
+import { PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 
 describe("sky_trade_compressed_nft", () => {
-  // Configure the client to use the local cluster.
-  //let provider = anchor.AnchorProvider.local("http://127.0.0.1:8899");
   const provider = anchor.AnchorProvider.env();
   const wallet = provider.wallet as anchor.Wallet;
   const program = anchor.workspace
@@ -47,7 +31,6 @@ describe("sky_trade_compressed_nft", () => {
   const payer = wallet.payer;
   console.log("payer address: " + payer.publicKey.toBase58());
 
-  //const connection = program.provider.connection;
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
   const metaplex = Metaplex.make(connection).use(keypairIdentity(payer));
@@ -73,9 +56,8 @@ describe("sky_trade_compressed_nft", () => {
     MPL_BUBBLEGUM_PROGRAM_ID_KEY
   );
 
-  // new block
-  /* const [bubblegumSigner] = PublicKey.findProgramAddressSync(
-    [Buffer.from("collection_cpi", "utf8")],
+  const [bubblegumSigner] = PublicKey.findProgramAddressSync(
+    [anchor.utils.bytes.utf8.encode("collection-cpi")],
     MPL_BUBBLEGUM_PROGRAM_ID_KEY
   );
 
@@ -88,15 +70,12 @@ describe("sky_trade_compressed_nft", () => {
   const canopyDepth = maxDepthSizePair.maxDepth - 5;
 
   const metadata = {
-    uri: "https://arweave.net/h19GMcMz7RLDY7kAHGWeWolHTmO83mLLMNPzEkF32BQ",
-    name: "NAME",
-    symbol: "SYMBOL",
+    uri: "https://arweave.net/xxx", // max length of 200
+    name: "AIRSPACE", // max length of 20
+    symbol: "ASP", // max length of 10
   };
 
-  //let collectionNft: CreateNftOutput;
   let collectionNft: CreateCompressedNftOutput;
-  //let assetId: PublicKey;
-  //let assetId2: PublicKey;
 
   before(async () => {
     // Create collection nft
@@ -125,7 +104,7 @@ describe("sky_trade_compressed_nft", () => {
 
     const tx = new Transaction().add(allocTreeIx);
 
-    const txSignature = await sendAndConfirmTransaction(
+    const txSig = await sendAndConfirmTransaction(
       connection,
       tx,
       [wallet.payer, merkleTree],
@@ -133,10 +112,8 @@ describe("sky_trade_compressed_nft", () => {
         commitment: "confirmed",
       }
     );
-    //console.log(`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`);
-    console.log("Your transaction signature", txSignature);
-  }); */
-  //
+    console.log(`https://explorer.solana.com/tx/${txSig}?cluster=devnet`);
+  });
 
   it("Is create tree!", async () => {
     let initParams = {
@@ -145,7 +122,8 @@ describe("sky_trade_compressed_nft", () => {
       public: false,
     };
 
-    const tx = await program.methods
+    // CreateTree instruction: Create merkle tree config
+    const createTreeInstruction = await program.methods
       .createTree(initParams)
       .accounts({
         payer: payer.publicKey,
@@ -157,11 +135,93 @@ describe("sky_trade_compressed_nft", () => {
         bubblegumProgram: MPL_BUBBLEGUM_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
-      .signers([payer])
-      .rpc();
-    console.log("Your transaction signature", tx);
+      .instruction();
 
-    //let result = await program.account.rider.fetch(rider);
-    //console.log("rider: ", result);
+    // Array of instructions
+    const instructions: anchor.web3.TransactionInstruction[] = [
+      createTreeInstruction,
+    ];
+
+    await createAndSendV0Tx(instructions);
   });
+
+  it("Is mint compressed nft!", async () => {
+    let initParams = {
+      name: metadata.name,
+      symbol: metadata.symbol,
+      uri: metadata.uri,
+    };
+
+    // MintCnft instruction: Mint compressed nft
+    const mintCnftInstruction = await program.methods
+      .mintCnft(initParams)
+      .accounts({
+        payer: payer.publicKey,
+        pda: pda,
+        treeAuthority: treeAuthority,
+        merkleTree: merkleTree.publicKey,
+        bubblegumSigner: bubblegumSigner,
+        collectionMint: collectionNft.mintAddress,
+        collectionMetadata: collectionNft.metadataAddress,
+        editionAccount: collectionNft.masterEditionAddress,
+        logWrapper: SPL_NOOP_PROGRAM_ID,
+        compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+        bubblegumProgram: MPL_BUBBLEGUM_PROGRAM_ID,
+        tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .instruction();
+
+    // Array of instructions
+    const instructions: anchor.web3.TransactionInstruction[] = [
+      mintCnftInstruction,
+    ];
+
+    await createAndSendV0Tx(instructions);
+  });
+
+  async function createAndSendV0Tx(
+    txInstructions: anchor.web3.TransactionInstruction[]
+  ) {
+    // Step 1 - Fetch Latest Blockhash
+    let latestBlockhash = await connection.getLatestBlockhash("confirmed");
+    console.log(
+      "   ✅ - Fetched latest blockhash. Last Valid Height:",
+      latestBlockhash.lastValidBlockHeight
+    );
+
+    // Step 2 - Generate Transaction Message
+    const messageV0 = new anchor.web3.TransactionMessage({
+      payerKey: payer.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+      instructions: txInstructions,
+    }).compileToV0Message();
+    console.log("   ✅ - Compiled Transaction Message");
+    const transaction = new anchor.web3.VersionedTransaction(messageV0);
+
+    // Step 3 - Sign your transaction with the required `Signers`
+    transaction.sign([payer]);
+    console.log("   ✅ - Transaction Signed");
+
+    // Step 4 - Send our v0 transaction to the cluster
+    const txid = await connection.sendTransaction(transaction, {
+      maxRetries: 5,
+    });
+    console.log("   ✅ - Transaction sent to network");
+
+    // Step 5 - Confirm Transaction
+    const confirmation = await connection.confirmTransaction({
+      signature: txid,
+      blockhash: latestBlockhash.blockhash,
+      lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+    });
+    if (confirmation.value.err) {
+      throw new Error("   ❌ - Transaction not confirmed.");
+    }
+    console.log(
+      "🎉 Transaction Succesfully Confirmed!",
+      "\n",
+      `https://explorer.solana.com/tx/${txid}?cluster=devnet`
+    );
+  }
 });

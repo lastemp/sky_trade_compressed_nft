@@ -4,7 +4,7 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-sky_trade_compressed_nft = "Anv8YYd1tp3Hx1JKV5GxhfqdHPVNr28J2VJubCvCn5YP"
+sky_trade_compressed_nft = "9eyVuCaP3qactwU5ihEoUwWEXFm1F1rqz9mozPXxLAvo"
 
 [registry]
 url = "https://api.apr.dev"

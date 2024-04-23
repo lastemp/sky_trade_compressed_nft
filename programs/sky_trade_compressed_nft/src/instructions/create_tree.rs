@@ -1,73 +1,17 @@
 //! CreateTree instruction handler
 
-use crate::error::SkyTradeCompressedNftError;
-use anchor_lang::prelude::*;
-use mpl_bubblegum::accounts::TreeConfig;
 use mpl_bubblegum::instructions::{
-    CreateTreeConfigCpi, CreateTreeConfigCpiAccounts, CreateTreeConfigCpiBuilder,
-    CreateTreeConfigInstructionArgs,
+    CreateTreeConfigCpi, CreateTreeConfigCpiAccounts, CreateTreeConfigInstructionArgs,
 };
 use spl_account_compression::Noop;
-use std::ops::Deref;
-use std::str::FromStr;
+use {
+    crate::{
+        error::SkyTradeCompressedNftError,
+        state::configs::{MplBubblegum, SPLCompression},
+    },
+    anchor_lang::prelude::*,
+};
 
-#[derive(Clone)]
-pub struct MplBubblegum;
-
-impl anchor_lang::Id for MplBubblegum {
-    fn id() -> Pubkey {
-        mpl_bubblegum::ID
-    }
-}
-
-#[derive(Clone)]
-pub struct SPLCompression;
-
-impl anchor_lang::Id for SPLCompression {
-    fn id() -> Pubkey {
-        spl_account_compression::id()
-        //Pubkey::from_str("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK").unwrap()
-    }
-}
-
-/* #[derive(Clone)]
-pub struct Noop;
-
-impl Id for Noop {
-    fn id() -> Pubkey {
-        Pubkey::from_str("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV").unwrap()
-    }
-} */
-
-// new
-/* #[derive(Clone)]
-pub struct TreeConfigAnchor(pub TreeConfig);
-
-impl AccountDeserialize for TreeConfigAnchor {
-    fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
-        Ok(Self(TreeConfig::from_bytes(buf)?))
-    }
-}
-
-impl anchor_lang::Owner for TreeConfigAnchor {
-    fn owner() -> Pubkey {
-        // pub use spl_token::ID is used at the top of the file
-        mpl_bubblegum::ID
-    }
-}
-
-// No-op since we can't write data to a foreign program's account.
-impl AccountSerialize for TreeConfigAnchor {}
-
-impl Deref for TreeConfigAnchor {
-    type Target = TreeConfig;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-} */
-
-//#[derive(Accounts)]
 #[derive(Accounts)]
 #[instruction(params: CreateTreeParams)]
 pub struct CreateTree<'info> {
@@ -152,20 +96,6 @@ pub fn create_tree(ctx: Context<CreateTree>, params: &CreateTreeParams) -> Resul
             public,
         },
     );
-
-    /* let xy = false;
-    let mut cpi_create_tree_config = CreateTreeConfigCpiBuilder::new(&bubblegum_program);
-    cpi_create_tree_config
-        .tree_config(&tree_config)
-        .merkle_tree(&merkle_tree)
-        .payer(&payer)
-        .tree_creator(&tree_creator)
-        .log_wrapper(&log_wrapper)
-        .compression_program(&compression_program)
-        .system_program(&system_program)
-        .max_depth(max_depth)
-        .max_buffer_size(max_buffer_size)
-        .public(xy); */
 
     // performs the CPI
     let _result = cpi_create_tree_config.invoke_signed(signer_seeds);
