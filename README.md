@@ -1,7 +1,7 @@
 # sky_trade_compressed_nft
 
-This is a sky trade compressed-nft Rust Smart Contract(Solana Blockchain).
-It enables minting of compressed nfts on-chain (https://sky.trade/).
+This is a [SkyTrade](https://sky.trade/) compressed-nft Rust Smart Contract(Solana Blockchain) built for educational purposes.
+It enables minting of compressed nfts on-chain.
 
 Below are some features contained in the program:
 
