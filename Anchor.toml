@@ -3,14 +3,14 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
+[programs.devnet]
 sky_trade_compressed_nft = "9eyVuCaP3qactwU5ihEoUwWEXFm1F1rqz9mozPXxLAvo"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
