@@ -1,7 +1,7 @@
 # sky_trade_compressed_nft
 
 This is a sky trade compressed-nft Rust Smart Contract(Solana Blockchain).
-It enables minting of compressed nfts on-chain.
+It enables minting of compressed nfts on-chain (https://sky.trade/).
 
 Below are some features contained in the program:
 
@@ -28,31 +28,31 @@ $ pwd
 
 1. JavaScript client for Mpl Bubblegum:
 
-   ```sh
+   ```
    npm install @metaplex-foundation/mpl-bubblegum
    ```
 
 1. Metaplex JavaScript SDK:
 
-   ```sh
+   ```
    npm install @metaplex-foundation/js @solana/web3.js
    ```
    
 1. A TypeScript library for interacting with SPL Account Compression and SPL NoOp:
 
-   ```sh
+   ```
    npm install --save @solana/spl-account-compression @solana/web3.js
    ```
    
    or
    
-   ```sh
+   ```
    yarn add @solana/spl-account-compression @solana/web3.js
    ```
    
 1. JavaScript client for Mpl Token Metadata:
 
-   ```sh
+   ```
    npm i @metaplex-foundation/mpl-token-metadata
    ```
    
@@ -80,6 +80,10 @@ This program must be left running in a separate terminal window.
 
 To deploy the Solana program in this repository to the Solana cluster
 that you have configured run:
+
+```
+anchor build
+```
 
 ```
 anchor deploy
